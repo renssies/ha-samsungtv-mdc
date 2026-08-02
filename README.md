@@ -3,8 +3,12 @@
 > 🍴 **Fork.** This is an extended fork of
 > [gethnet/ha-samsungtv-mdc](https://github.com/gethnet/ha-samsungtv-mdc)
 > (kept as the `upstream` git remote). Additions on top of upstream:
-> - **Switch** entities: **Power** and **Mute**.
-> - Extra **button** entities: **Power on**, **Power off**, **Volume up**, **Volume down**.
+> - **Switch** entities: **Power**, **Mute**, and an optional **Color/Picture
+>   Enhancement** switch (official MDC name "Function: Picture Control - Color
+>   Enhancement"), which you can enable/disable from the config flow and options.
+>   It is an optimistic switch driven by raw MDC command `0x21`/sub-function
+>   `0x50` (not modelled by the library).
+> - A **Restart** button (diagnostic entity category).
 > - A **`samsungtv_mdc.send_raw`** action to send arbitrary/RAW MDC command bytes
 >   (command + optional sub-command + hex data payload) to a display.
 >

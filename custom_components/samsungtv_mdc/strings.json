@@ -16,13 +16,15 @@
           "display_id": "Display ID",
           "host": "[%key:common::config_flow::data::host%]",
           "pin": "PIN (optional, 4-12 digits)",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "enable_color_picture_enhancement": "Color/Picture Enhancement switch"
         },
         "data_description": {
           "display_id": "Display ID reported by the display (often 0 or 1).",
           "host": "Host or IP address of the display.",
           "pin": "PIN for secured TLS (4-12 digits). Leave empty to disable TLS.",
-          "port": "Port used for MDC (default 1515)."
+          "port": "Port used for MDC (default 1515).",
+          "enable_color_picture_enhancement": "Create a switch entity to toggle the display's Color/Picture Enhancement."
         }
       }
     }
@@ -42,17 +44,8 @@
       "refresh": {
         "name": "Refresh now"
       },
-      "power_on": {
-        "name": "Power on"
-      },
-      "power_off": {
-        "name": "Power off"
-      },
-      "volume_up": {
-        "name": "Volume up"
-      },
-      "volume_down": {
-        "name": "Volume down"
+      "restart": {
+        "name": "Restart"
       }
     },
     "switch": {
@@ -61,6 +54,9 @@
       },
       "mute": {
         "name": "Mute"
+      },
+      "color_picture_enhancement": {
+        "name": "Color/Picture Enhancement"
       }
     },
     "number": {
@@ -90,16 +86,23 @@
           "host": "[%key:common::config_flow::data::host%]",
           "pin": "PIN (optional, 4-12 digits)",
           "port": "[%key:common::config_flow::data::port%]",
-          "scan_interval": "Update interval (minutes)"
+          "scan_interval": "Update interval (minutes)",
+          "enable_color_picture_enhancement": "Color/Picture Enhancement switch"
         },
         "data_description": {
           "display_id": "Display ID reported by the display (often 0 or 1).",
           "host": "Host or IP address of the display.",
           "pin": "PIN for secured TLS (4-12 digits). Leave empty to disable TLS.",
           "port": "Port used for MDC (default 1515).",
-          "scan_interval": "Minutes between updates (5-15)."
+          "scan_interval": "Minutes between updates (5-15).",
+          "enable_color_picture_enhancement": "Create a switch entity to toggle the display's Color/Picture Enhancement."
         }
       }
+    }
+  },
+  "exceptions": {
+    "enhancement_not_configured": {
+      "message": "The Color/Picture Enhancement MDC command is not configured for this integration yet."
     }
   },
   "services": {

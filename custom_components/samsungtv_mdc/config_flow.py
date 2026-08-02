@@ -23,9 +23,11 @@ from samsung_mdc.exceptions import MDCTimeoutError, MDCTLSAuthFailed
 
 from .const import (
     CONF_DISPLAY_ID,
+    CONF_ENABLE_ENHANCEMENT,
     CONF_PIN,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    DEFAULT_ENABLE_ENHANCEMENT,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
@@ -84,6 +86,14 @@ def _options_schema(defaults: dict[str, Any]) -> vol.Schema:
                     max=int(MAX_SCAN_INTERVAL.total_seconds()),
                 ),
             ),
+            vol.Required(
+                CONF_ENABLE_ENHANCEMENT,
+                default=bool(
+                    defaults.get(
+                        CONF_ENABLE_ENHANCEMENT, DEFAULT_ENABLE_ENHANCEMENT
+                    )
+                ),
+            ): selector.BooleanSelector(),
         }
     )
 
@@ -155,6 +165,12 @@ def _current_entry_values(entry: ConfigEntry) -> dict[str, Any]:
         ),
         CONF_PIN: entry.options.get(CONF_PIN, entry.data.get(CONF_PIN, "") or ""),
         CONF_SCAN_INTERVAL: scan_interval,
+        CONF_ENABLE_ENHANCEMENT: bool(
+            entry.options.get(
+                CONF_ENABLE_ENHANCEMENT,
+                entry.data.get(CONF_ENABLE_ENHANCEMENT, DEFAULT_ENABLE_ENHANCEMENT),
+            )
+        ),
     }
 
 
@@ -294,6 +310,9 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                         CONF_PORT: port,
                         CONF_PIN: pin_value,
                         CONF_SCAN_INTERVAL: scan_interval,
+                        CONF_ENABLE_ENHANCEMENT: bool(
+                            user_input[CONF_ENABLE_ENHANCEMENT]
+                        ),
                     }
                     _update_entry_configuration(
                         self.hass,
@@ -368,6 +387,9 @@ class OptionsFlowHandler(OptionsFlow):
                         CONF_PORT: port,
                         CONF_PIN: pin_value,
                         CONF_SCAN_INTERVAL: scan_interval,
+                        CONF_ENABLE_ENHANCEMENT: bool(
+                            user_input[CONF_ENABLE_ENHANCEMENT]
+                        ),
                     }
                     new_options = _merged_options(
                         self._entry.options,
