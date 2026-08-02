@@ -5,9 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import STATE_ON
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.restore_state import RestoreEntity
 from samsung_mdc import commands
 
 from .const import CONF_ENABLE_ENHANCEMENT, DEFAULT_ENABLE_ENHANCEMENT
@@ -19,17 +16,6 @@ if TYPE_CHECKING:
 
     from . import SamsungTVMDCConfigEntry
     from .coordinator import SamsungMDCDataUpdateCoordinator
-
-# "Color/Picture Enhancement" (official MDC name: "Function: Picture Control -
-# Color Enhancement"). It is not modelled by the python-samsung-mdc library, so
-# it is driven via the raw MDC send: command 0x21, sub-function 0x50, with a
-# single on/off payload byte (0x01 = on, 0x00 = off). The GET form is 0x21/0x50
-# with no data; state is not read back (the switch is optimistic).
-# Example for display id 8: SET ON = AA 21 08 02 50 01 7C, OFF = ...50 00 7B.
-ENHANCEMENT_CMD: int | None = 0x21
-ENHANCEMENT_SUBCMD: int | None = 0x50
-ENHANCEMENT_ON_DATA = b"\x01"
-ENHANCEMENT_OFF_DATA = b"\x00"
 
 
 def _enhancement_enabled(entry: SamsungTVMDCConfigEntry) -> bool:
@@ -122,12 +108,11 @@ class SamsungMDCMuteSwitch(SamsungMDCEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-class SamsungMDCEnhancementSwitch(SamsungMDCEntity, RestoreEntity, SwitchEntity):
+class SamsungMDCEnhancementSwitch(SamsungMDCEntity, SwitchEntity):
     """Switch to toggle the display's Color/Picture Enhancement.
 
-    The MDC command for this feature is not part of the modelled command set and
-    its state is not polled, so the switch tracks its own state locally and
-    restores it across restarts.
+    State is polled by the coordinator (raw MDC 0x21/0x50), so this is a normal
+    toggle that reflects the display.
     """
 
     _attr_translation_key = "color_picture_enhancement"
@@ -139,33 +124,20 @@ class SamsungMDCEnhancementSwitch(SamsungMDCEntity, RestoreEntity, SwitchEntity)
         """Initialize the enhancement switch."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-color-picture-enhancement"
-        self._attr_is_on = False
 
-    async def async_added_to_hass(self) -> None:
-        """Restore the last known switch state."""
-        await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_state()) is not None:
-            self._attr_is_on = last_state.state == STATE_ON
-
-    async def _async_send(self, data: bytes) -> None:
-        """Send the raw enhancement command, guarding against an unset command."""
-        if ENHANCEMENT_CMD is None:
-            raise HomeAssistantError(
-                translation_domain="samsungtv_mdc",
-                translation_key="enhancement_not_configured",
-            )
-        await self.coordinator.device.async_send_raw(
-            ENHANCEMENT_CMD, data, ENHANCEMENT_SUBCMD
-        )
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if Color/Picture Enhancement is on."""
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.color_enhancement
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Enable Color/Picture Enhancement."""
-        await self._async_send(ENHANCEMENT_ON_DATA)
-        self._attr_is_on = True
-        self.async_write_ha_state()
+        await self.coordinator.device.async_set_color_enhancement(on=True)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Disable Color/Picture Enhancement."""
-        await self._async_send(ENHANCEMENT_OFF_DATA)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+        await self.coordinator.device.async_set_color_enhancement(on=False)
+        await self.coordinator.async_request_refresh()

@@ -100,11 +100,6 @@
       }
     }
   },
-  "exceptions": {
-    "enhancement_not_configured": {
-      "message": "The Color/Picture Enhancement MDC command is not configured for this integration yet."
-    }
-  },
   "services": {
     "send_raw": {
       "description": "Send a raw MDC command to the display. Target a Samsung MDC device or provide a config entry.",

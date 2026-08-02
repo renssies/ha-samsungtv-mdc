@@ -27,10 +27,16 @@ if TYPE_CHECKING:
 
 from .const import (
     CONF_DISPLAY_ID,
+    CONF_ENABLE_ENHANCEMENT,
     CONF_SCAN_INTERVAL,
+    DEFAULT_ENABLE_ENHANCEMENT,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    ENHANCEMENT_CMD,
+    ENHANCEMENT_OFF,
+    ENHANCEMENT_ON,
+    ENHANCEMENT_SUBCMD,
     PanelState,
 )
 
@@ -53,6 +59,7 @@ class SamsungMDCState:
     serial_number: str | None
     model_name: str | None
     software_version: str | None
+    color_enhancement: bool | None
 
 
 class SamsungMDCDevice:
@@ -162,6 +169,23 @@ class SamsungMDCDevice:
             ):
                 await self._reset_client()
                 raise
+
+    async def async_color_enhancement(self) -> bool | None:
+        """Fetch the Color/Picture Enhancement state (raw MDC 0x21/0x50).
+
+        Returns True/False, or None when the display doesn't report a value.
+        """
+        ack, _rcmd, data = await self.async_send_raw(
+            ENHANCEMENT_CMD, b"", ENHANCEMENT_SUBCMD
+        )
+        if not ack or not data:
+            return None
+        return data[0] != ENHANCEMENT_OFF
+
+    async def async_set_color_enhancement(self, on: bool) -> None:  # noqa: FBT001
+        """Set the Color/Picture Enhancement state (raw MDC 0x21/0x50)."""
+        value = ENHANCEMENT_ON if on else ENHANCEMENT_OFF
+        await self.async_send_raw(ENHANCEMENT_CMD, bytes([value]), ENHANCEMENT_SUBCMD)
 
     async def async_device_name(self) -> tuple[Any, ...]:
         """Fetch device name."""
@@ -437,6 +461,20 @@ class SamsungMDCDataUpdateCoordinator(DataUpdateCoordinator[SamsungMDCState]):
             should_fetch=should_poll_optional
             and (previous_state is None or previous_state.software_version is None),
         )
+        enhancement_enabled = bool(
+            self.config_entry.options.get(
+                CONF_ENABLE_ENHANCEMENT,
+                self.config_entry.data.get(
+                    CONF_ENABLE_ENHANCEMENT, DEFAULT_ENABLE_ENHANCEMENT
+                ),
+            )
+        )
+        color_enhancement = await _maybe_fetch(
+            self.device.async_color_enhancement,
+            "color enhancement",
+            previous_state.color_enhancement if previous_state is not None else None,
+            should_fetch=should_poll_optional and enhancement_enabled,
+        )
 
         return SamsungMDCState(
             power=power_state,
@@ -450,6 +488,7 @@ class SamsungMDCDataUpdateCoordinator(DataUpdateCoordinator[SamsungMDCState]):
             serial_number=_first_value(serial_number),
             model_name=_first_value(model_name),
             software_version=_first_value(software_version),
+            color_enhancement=color_enhancement,
         )
 
     def mark_power_on_pending(self, duration_seconds: int = 45) -> None:
