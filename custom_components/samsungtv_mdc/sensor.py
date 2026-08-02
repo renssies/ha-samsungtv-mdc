@@ -1,4 +1,4 @@
-"""Ticker text entity for Samsung TV MDC."""
+"""Sensor and text entities for Samsung TV MDC."""
 
 from __future__ import annotations
 
@@ -7,11 +7,19 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.components.text import TextEntity
+from samsung_mdc import commands
 
 from .const import PanelState
 from .entity import SamsungMDCEntity
 
 TICKER_FIELD_COUNT = 14
+
+# All selectable input sources (the NONE placeholder is reported as "unknown").
+INPUT_SOURCE_OPTIONS: list[str] = [
+    source.name.lower()
+    for source in commands.INPUT_SOURCE.INPUT_SOURCE_STATE
+    if source is not commands.INPUT_SOURCE.INPUT_SOURCE_STATE.NONE
+]
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -32,6 +40,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SamsungMDCPanelStateSensor(coordinator, device_id),
+            SamsungMDCInputSourceSensor(coordinator, device_id),
             SamsungMDCTickerMessageText(
                 coordinator,
                 device_id,
@@ -63,6 +72,35 @@ class SamsungMDCPanelStateSensor(SamsungMDCEntity, SensorEntity):
     def native_value(self) -> str:
         """Return the panel state."""
         return self.coordinator.panel_state.value
+
+
+class SamsungMDCInputSourceSensor(SamsungMDCEntity, SensorEntity):
+    """Enum sensor reporting the display's current input source."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "input_source"
+    _attr_name = "Source"
+    _attr_icon = "mdi:video-input-hdmi"
+    _attr_options: ClassVar[list[str]] = INPUT_SOURCE_OPTIONS
+
+    def __init__(
+        self,
+        coordinator: SamsungMDCDataUpdateCoordinator,
+        device_id: str,
+    ) -> None:
+        """Initialize input source sensor."""
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = f"{device_id}-input-source"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the current input source, or None when unknown/off."""
+        if self.coordinator.data is None:
+            return None
+        source = self.coordinator.data.input_source
+        if source is None:
+            return None
+        return source.name.lower()
 
 
 class SamsungMDCTickerMessageText(SamsungMDCEntity, TextEntity):

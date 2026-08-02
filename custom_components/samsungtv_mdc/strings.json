@@ -38,6 +38,44 @@
           "starting": "Powering up",
           "on": "On"
         }
+      },
+      "input_source": {
+        "name": "Source",
+        "state": {
+          "s_video": "S-Video",
+          "component": "Component",
+          "av": "AV",
+          "av2": "AV 2",
+          "scart1": "SCART 1",
+          "dvi": "DVI",
+          "pc": "PC",
+          "bnc": "BNC",
+          "dvi_video": "DVI Video",
+          "magic_info": "MagicInfo",
+          "hdmi1": "HDMI 1",
+          "hdmi1_pc": "HDMI 1 (PC)",
+          "hdmi2": "HDMI 2",
+          "hdmi2_pc": "HDMI 2 (PC)",
+          "display_port_1": "DisplayPort 1",
+          "display_port_2": "DisplayPort 2",
+          "display_port_3": "DisplayPort 3",
+          "rf_tv": "RF (TV)",
+          "hdmi3": "HDMI 3",
+          "hdmi3_pc": "HDMI 3 (PC)",
+          "hdmi4": "HDMI 4",
+          "hdmi4_pc": "HDMI 4 (PC)",
+          "tv_dtv": "TV / DTV",
+          "plug_in_mode": "Plug-in module",
+          "hd_base_t": "HDBaseT",
+          "ocm": "OCM",
+          "media_magic_info_s": "MagicInfo-S (media)",
+          "widi_screen_mirroring": "Screen Mirroring (WiDi)",
+          "internal_usb": "Internal USB",
+          "url_launcher": "URL Launcher",
+          "iwb": "IWB",
+          "web_browser": "Web Browser",
+          "remote_workspace": "Remote Workspace"
+        }
       }
     },
     "button": {
