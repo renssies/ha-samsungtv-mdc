@@ -1,5 +1,16 @@
 # Samsung TV MDC for Home Assistant
 
+> 🍴 **Fork.** This is an extended fork of
+> [gethnet/ha-samsungtv-mdc](https://github.com/gethnet/ha-samsungtv-mdc)
+> (kept as the `upstream` git remote). Additions on top of upstream:
+> - **Switch** entities: **Power** and **Mute**.
+> - Extra **button** entities: **Power on**, **Power off**, **Volume up**, **Volume down**.
+> - A **`samsungtv_mdc.send_raw`** action to send arbitrary/RAW MDC command bytes
+>   (command + optional sub-command + hex data payload) to a display.
+>
+> See the shared [`../dev/`](../dev/README.md) Docker environment for running and
+> debugging this integration alongside the other integrations in this workspace.
+
 Custom integration for Samsung commercial displays that speak the MDC (Multiple Display Control) protocol. It uses the [`python-samsung-mdc`](https://pypi.org/project/python-samsung-mdc/) library to provide reliable power, input/source, volume/mute, backlight, color temperature, and ticker overlay control over TCP.
 
 ## AI/LLM Notice

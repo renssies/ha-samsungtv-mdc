@@ -1,3 +1,36 @@
+send_raw:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: samsungtv_mdc
+    config_entry_id:
+      required: false
+      selector:
+        text:
+    command:
+      required: true
+      example: 17
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    subcommand:
+      required: false
+      example: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    data:
+      required: false
+      example: "01"
+      selector:
+        text:
+
 set_ticker:
   target:
     entity:

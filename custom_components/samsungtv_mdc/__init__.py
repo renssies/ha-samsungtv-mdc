@@ -41,6 +41,7 @@ PLATFORMS: list[Platform] = [
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
@@ -130,6 +131,26 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
+        "send_raw",
+        _async_handle_send_raw,
+        vol.Schema(
+            {
+                vol.Exclusive("config_entry_id", "target"): cv.string,
+                vol.Exclusive("entity_id", "target"): cv.entity_ids,
+                vol.Exclusive("device_id", "target"): cv.ensure_list(cv.string),
+                vol.Required("command"): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=0xFF)
+                ),
+                vol.Optional("subcommand"): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=0xFF)
+                ),
+                vol.Optional("data", default=""): cv.string,
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
         "set_ticker",
         _async_handle_set_ticker,
         vol.Schema(
@@ -178,6 +199,54 @@ def _async_unregister_services(hass: HomeAssistant) -> None:
     """Unregister integration services when no entries left."""
     if hass.services.has_service(DOMAIN, "set_ticker"):
         hass.services.async_remove(DOMAIN, "set_ticker")
+    if hass.services.has_service(DOMAIN, "send_raw"):
+        hass.services.async_remove(DOMAIN, "send_raw")
+
+
+def _parse_raw_data(raw: str) -> bytes:
+    """Parse the ``data`` field of send_raw into bytes.
+
+    Accepts hex (``"1A2B"`` or ``"1a 2b"`` or ``"0x1a,0x2b"``) or an empty
+    string for no payload.
+    """
+    cleaned = raw.strip().lower().replace("0x", "").replace(",", " ")
+    if not cleaned:
+        return b""
+    tokens = cleaned.split()
+    try:
+        if len(tokens) > 1:
+            return bytes(int(token, 16) for token in tokens)
+        return bytes.fromhex(cleaned)
+    except ValueError as err:
+        msg = f"Invalid raw data payload: {raw!r} ({err})"
+        raise ServiceValidationError(msg) from err
+
+
+async def _async_handle_send_raw(call: ServiceCall) -> None:
+    """Handle the send_raw service call."""
+    entry = await _async_entry_from_call(call)
+    runtime = entry.runtime_data
+    if runtime is None:
+        msg = "Target is missing or not loaded"
+        raise ServiceValidationError(msg)
+
+    command = call.data["command"]
+    subcommand = call.data.get("subcommand")
+    data = _parse_raw_data(call.data.get("data", ""))
+
+    ack, resp_cmd, resp_data = await runtime.device.async_send_raw(
+        command, data, subcommand
+    )
+    runtime.coordinator.logger.debug(
+        "send_raw cmd=0x%02X sub=%s data=%s -> ack=%s cmd=%s data=%s",
+        command,
+        subcommand,
+        data.hex(),
+        ack,
+        resp_cmd,
+        resp_data.hex(),
+    )
+    await runtime.coordinator.async_request_refresh()
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

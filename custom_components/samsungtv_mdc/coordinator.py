@@ -135,6 +135,34 @@ class SamsungMDCDevice:
         """Set ticker configuration."""
         await self._call("ticker", data)
 
+    async def async_send_raw(
+        self,
+        command: int,
+        data: bytes = b"",
+        subcommand: int | None = None,
+    ) -> tuple[bool, tuple[int, ...], bytes]:
+        """Send a raw MDC command and return (ack, response_cmd, response_data).
+
+        This exposes the low-level MDC protocol so any command supported by the
+        display can be issued, including ones not modelled by this integration.
+        The checksum, header and display-id framing are handled by the library.
+        """
+        async with self._lock:
+            cmd: int | tuple[int, int] = (
+                command if subcommand is None else (command, subcommand)
+            )
+            try:
+                return await self._client.send(cmd, self.display_id, data)
+            except (
+                MDCTimeoutError,
+                MDCReadTimeoutError,
+                MDCResponseError,
+                OSError,
+                ConnectionError,
+            ):
+                await self._reset_client()
+                raise
+
     async def async_device_name(self) -> tuple[Any, ...]:
         """Fetch device name."""
         return await self._call("device_name")

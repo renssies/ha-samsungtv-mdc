@@ -41,6 +41,26 @@
     "button": {
       "refresh": {
         "name": "Refresh now"
+      },
+      "power_on": {
+        "name": "Power on"
+      },
+      "power_off": {
+        "name": "Power off"
+      },
+      "volume_up": {
+        "name": "Volume up"
+      },
+      "volume_down": {
+        "name": "Volume down"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "mute": {
+        "name": "Mute"
       }
     },
     "number": {
@@ -83,6 +103,32 @@
     }
   },
   "services": {
+    "send_raw": {
+      "description": "Send a raw MDC command to the display. Target a Samsung MDC device or provide a config entry.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Samsung MDC config entry ID. Only needed when not targeting a device.",
+          "name": "Config entry"
+        },
+        "device_id": {
+          "description": "Samsung MDC display device.",
+          "name": "Device"
+        },
+        "command": {
+          "description": "MDC command byte (0-255), e.g. 17 (0x11) for power.",
+          "name": "Command"
+        },
+        "subcommand": {
+          "description": "Optional MDC sub-command byte (0-255) for commands that require one.",
+          "name": "Sub-command"
+        },
+        "data": {
+          "description": "Optional payload as hex, e.g. \"01\" or \"1a 2b\". Leave empty for none.",
+          "name": "Data"
+        }
+      },
+      "name": "Send raw MDC command"
+    },
     "set_ticker": {
       "description": "Update ticker text and configuration on the display. Omitted fields reuse the current ticker configuration. Target the ticker sensor or display device, or provide a config entry.",
       "fields": {

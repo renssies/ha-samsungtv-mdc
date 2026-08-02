@@ -8,6 +8,26 @@
     "button": {
       "refresh": {
         "default": "mdi:refresh"
+      },
+      "power_on": {
+        "default": "mdi:power"
+      },
+      "power_off": {
+        "default": "mdi:power-off"
+      },
+      "volume_up": {
+        "default": "mdi:volume-plus"
+      },
+      "volume_down": {
+        "default": "mdi:volume-minus"
+      }
+    },
+    "switch": {
+      "power": {
+        "default": "mdi:power"
+      },
+      "mute": {
+        "default": "mdi:volume-mute"
       }
     },
     "number": {
@@ -27,6 +47,9 @@
   "services": {
     "set_ticker": {
       "service": "mdi:message-text-outline"
+    },
+    "send_raw": {
+      "service": "mdi:code-braces"
     }
   }
 }
