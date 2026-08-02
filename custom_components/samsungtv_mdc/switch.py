@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import STATE_ON
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.restore_state import RestoreEntity
 from samsung_mdc import commands
 
 from .const import CONF_ENABLE_ENHANCEMENT, DEFAULT_ENABLE_ENHANCEMENT
@@ -120,16 +122,16 @@ class SamsungMDCMuteSwitch(SamsungMDCEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
-class SamsungMDCEnhancementSwitch(SamsungMDCEntity, SwitchEntity):
+class SamsungMDCEnhancementSwitch(SamsungMDCEntity, RestoreEntity, SwitchEntity):
     """Switch to toggle the display's Color/Picture Enhancement.
 
-    The switch is optimistic (assumed state): the MDC command for this feature is
-    not part of the modelled command set, so state is not read back.
+    The MDC command for this feature is not part of the modelled command set and
+    its state is not polled, so the switch tracks its own state locally and
+    restores it across restarts.
     """
 
     _attr_translation_key = "color_picture_enhancement"
     _attr_name = "Color/Picture Enhancement"
-    _attr_assumed_state = True
 
     def __init__(
         self, coordinator: SamsungMDCDataUpdateCoordinator, device_id: str
@@ -138,6 +140,12 @@ class SamsungMDCEnhancementSwitch(SamsungMDCEntity, SwitchEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-color-picture-enhancement"
         self._attr_is_on = False
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the last known switch state."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._attr_is_on = last_state.state == STATE_ON
 
     async def _async_send(self, data: bytes) -> None:
         """Send the raw enhancement command, guarding against an unset command."""
