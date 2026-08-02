@@ -17,9 +17,6 @@
       "power": {
         "default": "mdi:power"
       },
-      "mute": {
-        "default": "mdi:volume-mute"
-      },
       "color_picture_enhancement": {
         "default": "mdi:auto-fix"
       }

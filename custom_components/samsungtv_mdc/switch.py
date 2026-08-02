@@ -36,10 +36,7 @@ async def async_setup_entry(
     """Set up Samsung MDC switches."""
     coordinator = entry.runtime_data.coordinator
     device_id = entry.runtime_data.device_id
-    entities: list[SwitchEntity] = [
-        SamsungMDCPowerSwitch(coordinator, device_id),
-        SamsungMDCMuteSwitch(coordinator, device_id),
-    ]
+    entities: list[SwitchEntity] = [SamsungMDCPowerSwitch(coordinator, device_id)]
     if _enhancement_enabled(entry):
         entities.append(SamsungMDCEnhancementSwitch(coordinator, device_id))
     async_add_entities(entities)
@@ -59,10 +56,10 @@ class SamsungMDCPowerSwitch(SamsungMDCEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-power"
 
     @property
-    def is_on(self) -> bool | None:
-        """Return True if the display is on."""
+    def is_on(self) -> bool:
+        """Return True if the display is on (defaults to on when unavailable)."""
         if self.coordinator.data is None:
-            return None
+            return True
         return self.coordinator.data.power == commands.POWER.POWER_STATE.ON
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
@@ -74,37 +71,6 @@ class SamsungMDCPowerSwitch(SamsungMDCEntity, SwitchEntity):
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn the display off."""
         await self.coordinator.device.async_set_power(commands.POWER.POWER_STATE.OFF)
-        await self.coordinator.async_request_refresh()
-
-
-class SamsungMDCMuteSwitch(SamsungMDCEntity, SwitchEntity):
-    """Switch to control display mute."""
-
-    _attr_translation_key = "mute"
-    _attr_name = "Mute"
-
-    def __init__(
-        self, coordinator: SamsungMDCDataUpdateCoordinator, device_id: str
-    ) -> None:
-        """Initialize the mute switch."""
-        super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"{device_id}-mute"
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return True if the display is muted."""
-        if self.coordinator.data is None or self.coordinator.data.mute is None:
-            return None
-        return self.coordinator.data.mute == commands.MUTE.MUTE_STATE.ON
-
-    async def async_turn_on(self, **_kwargs: Any) -> None:
-        """Mute the display."""
-        await self.coordinator.device.async_set_mute(muted=True)
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **_kwargs: Any) -> None:
-        """Unmute the display."""
-        await self.coordinator.device.async_set_mute(muted=False)
         await self.coordinator.async_request_refresh()
 
 
@@ -126,10 +92,10 @@ class SamsungMDCEnhancementSwitch(SamsungMDCEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-color-picture-enhancement"
 
     @property
-    def is_on(self) -> bool | None:
-        """Return True if Color/Picture Enhancement is on."""
-        if self.coordinator.data is None:
-            return None
+    def is_on(self) -> bool:
+        """Return True if enhancement is on (defaults to on when unavailable)."""
+        if self.coordinator.data is None or self.coordinator.data.color_enhancement is None:
+            return True
         return self.coordinator.data.color_enhancement
 
     async def async_turn_on(self, **_kwargs: Any) -> None:

@@ -90,9 +90,6 @@
       "power": {
         "name": "Power"
       },
-      "mute": {
-        "name": "Mute"
-      },
       "color_picture_enhancement": {
         "name": "Color/Picture Enhancement"
       }
