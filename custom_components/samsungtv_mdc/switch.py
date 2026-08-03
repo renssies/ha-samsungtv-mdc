@@ -56,10 +56,10 @@ class SamsungMDCPowerSwitch(SamsungMDCEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-power"
 
     @property
-    def is_on(self) -> bool:
-        """Return True if the display is on (defaults to on when unavailable)."""
+    def is_on(self) -> bool | None:
+        """Return True if the display is on."""
         if self.coordinator.data is None:
-            return True
+            return None
         return self.coordinator.data.power == commands.POWER.POWER_STATE.ON
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
@@ -92,10 +92,17 @@ class SamsungMDCEnhancementSwitch(SamsungMDCEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}-color-picture-enhancement"
 
     @property
-    def is_on(self) -> bool:
-        """Return True if enhancement is on (defaults to on when unavailable)."""
-        if self.coordinator.data is None or self.coordinator.data.color_enhancement is None:
-            return True
+    def available(self) -> bool:
+        """Unavailable when the enhancement state could not be read."""
+        return (
+            super().available and self.coordinator.data.color_enhancement is not None
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if Color/Picture Enhancement is on."""
+        if self.coordinator.data is None:
+            return None
         return self.coordinator.data.color_enhancement
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
