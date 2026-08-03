@@ -69,8 +69,10 @@ class SamsungMDCManualLampNumber(_MDCBaseNumber):
         self._attr_unique_id = f"{device_id}-manual_lamp"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return current lamp level."""
+        if self.coordinator.data is None:
+            return None
         return self.coordinator.data.manual_lamp
 
     async def async_set_native_value(self, value: float) -> None:
@@ -102,8 +104,10 @@ class SamsungMDCColorTemperatureNumber(_MDCBaseNumber):
         self._attr_unique_id = f"{device_id}-color_temperature"
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return current color temperature in hectoKelvin."""
+        if self.coordinator.data is None:
+            return None
         return self.coordinator.data.color_temperature_hk
 
     async def async_set_native_value(self, value: float) -> None:

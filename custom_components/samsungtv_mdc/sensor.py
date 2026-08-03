@@ -125,7 +125,7 @@ class SamsungMDCTickerMessageText(SamsungMDCEntity, TextEntity):
     @property
     def native_value(self) -> str | None:
         """Return current ticker message."""
-        ticker = self.coordinator.data.ticker
+        ticker = self.coordinator.data.ticker if self.coordinator.data else None
         if not ticker:
             return None
         return str(ticker[-1])
@@ -133,7 +133,7 @@ class SamsungMDCTickerMessageText(SamsungMDCEntity, TextEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose ticker configuration details."""
-        ticker = self.coordinator.data.ticker
+        ticker = self.coordinator.data.ticker if self.coordinator.data else None
         if not ticker:
             return {
                 "enabled": None,
@@ -196,7 +196,7 @@ class SamsungMDCTickerMessageText(SamsungMDCEntity, TextEntity):
 
     async def async_set_value(self, value: str) -> None:
         """Update ticker message while preserving existing ticker config."""
-        ticker = self.coordinator.data.ticker
+        ticker = self.coordinator.data.ticker if self.coordinator.data else None
         if not ticker:
             ticker = await self._device.async_ticker()
         data = list(ticker)

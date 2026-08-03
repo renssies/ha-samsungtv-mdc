@@ -9,16 +9,11 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.util import dt as dt_util
 from samsung_mdc.commands import TICKER
-from samsung_mdc.exceptions import NAKError
 
 from .const import (
     CONF_DISPLAY_ID,
@@ -87,13 +82,6 @@ async def async_setup_entry(
     device = SamsungMDCDevice(host, display_id, port, pin, DEFAULT_TIMEOUT)
     coordinator = SamsungMDCDataUpdateCoordinator(hass, entry, device)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except NAKError as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except Exception as err:
-        raise ConfigEntryNotReady(err) from err
-
     entry.runtime_data = SamsungTVMDCData(
         device=device,
         coordinator=coordinator,
@@ -105,6 +93,13 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _async_register_services(hass)
+
+    # Fetch the first data set in the background so a slow or sleeping display
+    # does not delay Home Assistant startup. Entities stay unavailable until the
+    # first successful poll completes.
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), name=f"{DOMAIN} initial refresh"
+    )
 
     return True
 
@@ -261,9 +256,10 @@ async def _async_handle_set_ticker(call: ServiceCall) -> None:
     if runtime is None:
         msg = "Ticker target is missing or not loaded"
         raise ServiceValidationError(msg)
-    current_ticker = (
-        runtime.coordinator.data.ticker or await runtime.device.async_ticker()
+    cached_ticker = (
+        runtime.coordinator.data.ticker if runtime.coordinator.data else None
     )
+    current_ticker = cached_ticker or await runtime.device.async_ticker()
     ticker_data = _ticker_data_from_call(call, current_ticker)
     await runtime.device.async_set_ticker(ticker_data)
     await runtime.coordinator.async_request_refresh()

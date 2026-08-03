@@ -49,8 +49,8 @@ class SamsungMDCRefreshButton(SamsungMDCEntity, ButtonEntity):
         self._attr_unique_id = f"{device_id}-refresh"
 
     async def async_press(self) -> None:
-        """Request a data refresh."""
-        await self.coordinator.async_request_refresh()
+        """Immediately refresh all data from the display."""
+        await self.coordinator.async_refresh()
 
 
 class SamsungMDCRestartButton(SamsungMDCEntity, ButtonEntity):

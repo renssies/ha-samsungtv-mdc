@@ -95,6 +95,8 @@ class SamsungMDCMediaPlayer(SamsungMDCEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return media player state."""
+        if self.coordinator.data is None:
+            return None
         power = self.coordinator.data.power
         if power == commands.POWER.POWER_STATE.ON:
             return MediaPlayerState.ON
@@ -110,6 +112,8 @@ class SamsungMDCMediaPlayer(SamsungMDCEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Return the volume level (0..1)."""
+        if self.coordinator.data is None:
+            return None
         volume = self.coordinator.data.volume
         if volume is None:
             return None
@@ -118,6 +122,8 @@ class SamsungMDCMediaPlayer(SamsungMDCEntity, MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool | None:
         """Return whether the device is muted."""
+        if self.coordinator.data is None:
+            return None
         mute_state = self.coordinator.data.mute
         if mute_state is None:
             return None
@@ -126,6 +132,8 @@ class SamsungMDCMediaPlayer(SamsungMDCEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
+        if self.coordinator.data is None:
+            return None
         current = self.coordinator.data.input_source
         if current is None:
             return None
