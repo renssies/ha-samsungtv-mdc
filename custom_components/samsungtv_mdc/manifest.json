@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/renssies/ha-samsungtv-mdc/issues",
   "quality_scale": "bronze",
   "requirements": ["python-samsung-mdc==1.17.0"],
-  "version": "2026.1.12+fork.1"
+  "version": "1.0.0"
 }
